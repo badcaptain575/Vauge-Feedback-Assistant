@@ -1,0 +1,426 @@
+{
+  "name": "Vauge Feedback Assistant",
+  "nodes": [
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0C834PHHCJ",
+          "mode": "list",
+          "cachedResultName": "design-feedback-uploads"
+        },
+        "text": "={{ $json['0'].content[0].text }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        112,
+        -208
+      ],
+      "id": "db50f409-25c9-4723-b2b8-06a6a6a088ce",
+      "name": "Send a message",
+      "webhookId": "66742ded-e16d-4cd2-9578-70a415eb4be2",
+      "credentials": {
+        "slackApi": {
+          "id": "NjdLj19oUpMS51m3",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -784,
+        -96
+      ],
+      "id": "f82e5bf3-26da-4e50-997a-441189f327fe",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "channel",
+        "operation": "history",
+        "channelId": {
+          "__rl": true,
+          "value": "C0C834PHHCJ",
+          "mode": "list",
+          "cachedResultName": "design-feedback-uploads"
+        },
+        "limit": 1,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        -928,
+        -352
+      ],
+      "id": "0273d580-12d8-49cb-8c7c-550631f52f70",
+      "name": "Get the history of a channel",
+      "webhookId": "ac4e098a-521e-46c0-a21d-b50a7310f1a3",
+      "credentials": {
+        "slackApi": {
+          "id": "NjdLj19oUpMS51m3",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "openai/gpt-4o",
+          "mode": "list",
+          "cachedResultName": "OPENAI/GPT-4O"
+        },
+        "text": "=You are a senior Art Director at a high-end ad agency. Your job is to intercept vague feedback from clients and translate it into specific, actionable design questions for your team.\n\nHere is the full conversation transcript of the feedback thread so far. It includes the original draft caption, past feedback, any previous questions you asked, and the client's latest reply:\n\n[THREAD TRANSCRIPT]\n{{ $json.thread_transcript }}\n\nCRITICAL INSTRUCTION: Do NOT output generic design questions, and do NOT repeat previous questions. You MUST prove you have analyzed the specific image by explicitly naming elements currently visible in the draft, while adapting to the client's latest pushback in the transcript.\n\nStep 1: Context & Visual Audit (Do not output this step)\nSilently analyze the draft and the transcript. Identify what the client rejected previously. Identify the dominant colors, specific text, visual weight, and layout to find new angles for their latest vague comment.\n\nStep 2: Formulate New Clarification Questions\nBased on the client's latest reply in the transcript and your visual audit, generate exactly 3 new, specific, multiple-choice questions.\n\nRules for Questions:\n\nEach question MUST explicitly reference a specific visual element in the current image (e.g., \"Regarding the 'Garba Queen' text...\").\n\nFocus strictly on decoding the client's most recent vague comment at the bottom of the transcript.\n\nProvide 2-3 specific, actionable options for each question.\n\nNever repeat options or questions that were already proposed in the transcript.\n\nOutput ONLY the 3 questions and their options. Do not include introductory or concluding remarks.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -96
+      ],
+      "id": "de678395-9a2b-4baa-bb94-6e898ea6be2c",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "0JUovOTgxZlBpoZO",
+          "name": "OpenAi account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5ed7e416-8a0d-4d7a-9cdc-3893045363f7",
+              "leftValue": "={{ $json.thread_ts }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -688,
+        -448
+      ],
+      "id": "53073dc0-3b31-496c-a353-113dbf213512",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "channel",
+        "operation": "replies",
+        "channelId": {
+          "__rl": true,
+          "value": "C0C834PHHCJ",
+          "mode": "list",
+          "cachedResultName": "design-feedback-uploads"
+        },
+        "ts": "={{ $json.thread_ts }}",
+        "filters": {
+          "oldest": "={{ $now.minus({ minutes: 1 }).toUnixInteger() }}"
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        -464,
+        -224
+      ],
+      "id": "926d2eac-b7c0-4886-9d88-75c2aeafc7c9",
+      "name": "Get a thread of messages posted to a channel",
+      "webhookId": "51145dd1-e42c-4d0d-871d-2ebabb00cf8b",
+      "credentials": {
+        "slackApi": {
+          "id": "NjdLj19oUpMS51m3",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a80fcef3-1848-48ce-9c5d-b4fbfc5289eb",
+              "name": "thread_transcript",
+              "value": "={{ $items('Get a thread of messages posted to a channel').map(msg => msg.json.text).join('\\n\\n---\\n\\n') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -64,
+        -432
+      ],
+      "id": "e648da95-cfca-4a05-9b49-ecf882cb8fa8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1UDFOo8j1eANhUh4zycK9vmTWsct7S9PSI6h8JppaV7Y",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now }}",
+            "Client / Project Name": "={{ $('Get a thread of messages posted to a channel').first().json.text }}",
+            "Draft Image URL": "={{ $('Get a thread of messages posted to a channel').first().json.files[0].url_private }}",
+            "Vague Feedback": "={{ $('Get the history of a channel').first().json.text }}",
+            "AI Clarification Questions": "={{ $json.message.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Client / Project Name",
+              "displayName": "Client / Project Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Draft Image URL",
+              "displayName": "Draft Image URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Vague Feedback",
+              "displayName": "Vague Feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Clarification Questions",
+              "displayName": "AI Clarification Questions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        336,
+        -208
+      ],
+      "id": "5de4a63b-dd02-497d-a7de-a0c896b27949",
+      "name": "Data Structure",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "rYdcYgTh7GLmw69v",
+          "name": "Google Sheets account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.files[0].url_private_download }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "slackApi",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -272,
+        -528
+      ],
+      "id": "4f7ec469-6398-467a-bd51-c74cf77b119c",
+      "name": "Image Binary",
+      "executeOnce": true,
+      "credentials": {
+        "slackApi": {
+          "id": "NjdLj19oUpMS51m3",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get the history of a channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the history of a channel": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get a thread of messages posted to a channel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Get a thread of messages posted to a channel": {
+      "main": [
+        [
+          {
+            "node": "Image Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Data Structure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Binary": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d698ef5d-96d3-4077-b2d2-8a8ada5e1a1a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5dd4a3593af416ebffa790dde0902906295266a54f10e046743f25b323c84262"
+  },
+  "id": "62yiJ70SjWEDTtYE",
+  "tags": []
+}

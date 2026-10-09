@@ -15,10 +15,10 @@ The Vague Feedback Assistant is a deterministic control graph built in n8n. It i
 4. **Data Logging:** A Google Sheets OAuth integration appends the interaction—capturing the timestamp, client name, draft image URL, raw feedback, and the generated AI questions—into a live centralized dashboard to track time saved and ROI.
 
 ## Repository Contents
-* `workflow.json`: The complete n8n workflow export. 
+* "Vauge Feedback Assistant.json" : The complete n8n workflow export. 
 
 ## How to View the Workflow
-1. Download the `workflow.json` file.
+1. Download the "Vauge Feedback Assistant.json" file.
 2. Open your local or cloud instance of n8n.
 3. Go to your workflows dashboard, click **Import from File**, and select the JSON.
 4. Update the OAuth credentials for Slack, OpenAI, and Google Sheets to run the pipeline.
